@@ -3,6 +3,7 @@ var pkg         = require('./package.json'),
 
     connect     = require('gulp-connect'),
     del         = require('del'),
+    fileInclude = require('gulp-file-include'),
     imagemin    = require('gulp-imagemin'),
     inlineCss   = require('gulp-inline-css'),
     plumber     = require('gulp-plumber'),
@@ -56,6 +57,10 @@ gulp.task('connect:rel', function() {
 gulp.task('html:dev', function() {
   return gulp.src([paths.html, '!**/_*.html'])
     .pipe(plumber())
+    .pipe(fileInclude({
+      prefix: '@@',
+      basepath: '@file'
+    }))
     .pipe(inlineCss())
     .pipe(gulp.dest(paths.release))
     .pipe(connect.reload());
