@@ -68,6 +68,10 @@ gulp.task('html:dev', function() {
 
 gulp.task('html:rel', function() {
   return gulp.src([paths.html, '!**/_*.html'])
+    .pipe(fileInclude({
+      prefix: '@@',
+      basepath: '@file'
+    }))
     .pipe(inlineCss())
     .pipe(gulp.dest(paths.release))
 });
