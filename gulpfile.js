@@ -4,6 +4,7 @@ var pkg         = require('./package.json'),
     connect     = require('gulp-connect'),
     del         = require('del'),
     fileInclude = require('gulp-file-include'),
+    htmlClean   = require('gulp-htmlclean'),
     imagemin    = require('gulp-imagemin'),
     inlineCss   = require('gulp-inline-css'),
     plumber     = require('gulp-plumber'),
@@ -62,6 +63,7 @@ gulp.task('html:dev', function() {
       basepath: '@file'
     }))
     .pipe(inlineCss())
+    .pipe(htmlClean())
     .pipe(gulp.dest(paths.release))
     .pipe(connect.reload());
 });
@@ -73,6 +75,7 @@ gulp.task('html:rel', function() {
       basepath: '@file'
     }))
     .pipe(inlineCss())
+    .pipe(htmlClean())
     .pipe(gulp.dest(paths.release))
 });
 
