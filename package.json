@@ -1,6 +1,6 @@
 {
   "name": "POSHTA",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A simple email template generator using Gulp",
   "main": "gulpfile.js",
   "private": true,

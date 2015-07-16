@@ -14,6 +14,7 @@ var paths = {
   assets  : 'src/assets/**/*',
   images  : 'src/images/**/*.{png,jpg,gif}',
   html    : 'src/**/*.html',
+  css     : 'src/**/*.css',
   release : 'release/'
 };
 
@@ -30,6 +31,7 @@ gulp.task('clean', function(cb) {
 
 gulp.task('watch', function () {
   gulp.watch(paths.html, ['html:dev']);
+  gulp.watch(paths.css, ['html:dev']);
   gulp.watch(paths.images, ['imagemin:dev']);
   gulp.watch(paths.assets, ['assets']);
 });
