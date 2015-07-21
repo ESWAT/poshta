@@ -3,35 +3,30 @@ var pkg         = require('./package.json'),
 
     connect     = require('gulp-connect'),
     del         = require('del'),
-    fileInclude = require('gulp-file-include'),
-    htmlClean   = require('gulp-htmlclean'),
     imagemin    = require('gulp-imagemin'),
     inlineCss   = require('gulp-inline-css'),
+    jade        = require('gulp-jade'),
     plumber     = require('gulp-plumber'),
-    runSequence = require('run-sequence');
+    runSequence = require('run-sequence'),
+    sass        = require('gulp-sass'),
+    sourcemaps  = require('gulp-sourcemaps');
 
 var paths = {
   assets  : 'src/assets/**/*',
   images  : 'src/images/**/*.{png,jpg,gif}',
-  html    : 'src/**/*.html',
-  css     : 'src/**/*.css',
+  jade    : 'src/**/*.jade',
+  sass    : 'src/sass/**/*.scss',
   release : 'release/'
 };
-
-var locals = {
-  title       : pkg.name,
-  author      : pkg.author,
-  description : pkg.description,
-  version     : pkg.version
-}
 
 gulp.task('clean', function(cb) {
   del(paths.release, cb);
 });
 
 gulp.task('watch', function () {
-  gulp.watch(paths.html, ['html:dev']);
-  gulp.watch(paths.css, ['html:dev']);
+  gulp.watch(paths.scripts, ['js:dev']);
+  gulp.watch(paths.jade, ['jade:dev']);
+  gulp.watch(paths.sass, ['sass:dev', 'jade:dev']);
   gulp.watch(paths.images, ['imagemin:dev']);
   gulp.watch(paths.assets, ['assets']);
 });
@@ -57,27 +52,37 @@ gulp.task('connect:rel', function() {
   });
 });
 
-gulp.task('html:dev', function() {
-  return gulp.src([paths.html, '!**/_*.html'])
+gulp.task('sass:dev', function() {
+  return gulp.src([paths.sass, '!**/_*.scss'])
     .pipe(plumber())
-    .pipe(fileInclude({
-      prefix: '@@',
-      basepath: '@file'
-    }))
+      .pipe(sourcemaps.init())
+    .pipe(sass().on('error', sass.logError))
+    .pipe(sourcemaps.write('.'))
+    .pipe(gulp.dest(paths.release + 'css/'))
+    .pipe(connect.reload());
+});
+
+gulp.task('sass:rel', function() {
+  return gulp.src([paths.sass, '!**/_*.scss'])
+  .pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError))
+  .pipe(gulp.dest(paths.release + 'css/'))
+});
+
+gulp.task('jade:dev', function() {
+  return gulp.src([paths.jade, '!**/_*.jade'])
+    .pipe(plumber())
+    .pipe(jade())
+    .pipe(gulp.dest(paths.release))
     .pipe(inlineCss())
-    .pipe(htmlClean())
     .pipe(gulp.dest(paths.release))
     .pipe(connect.reload());
 });
 
-gulp.task('html:rel', function() {
-  return gulp.src([paths.html, '!**/_*.html'])
-    .pipe(fileInclude({
-      prefix: '@@',
-      basepath: '@file'
-    }))
+gulp.task('jade:rel', function() {
+  return gulp.src([paths.jade, '!**/_*.jade'])
+    .pipe(jade())
+    .pipe(gulp.dest(paths.release))
     .pipe(inlineCss())
-    .pipe(htmlClean())
     .pipe(gulp.dest(paths.release))
 });
 
@@ -95,8 +100,10 @@ gulp.task('imagemin:rel', function() {
 
 // Start server in development mode
 gulp.task('default', ['clean'], function(cb) {
-  runSequence([
-      'html:dev',
+  runSequence(
+    'sass:dev',
+    [
+      'jade:dev',
       'assets',
       'imagemin:dev',
     ], [
@@ -108,8 +115,10 @@ gulp.task('default', ['clean'], function(cb) {
 
 // Start server in preview mode
 gulp.task('preview', ['clean'], function(cb) {
-  runSequence([
-      'html:rel',
+  runSequence(
+    'sass:rel',
+    [
+      'jade:rel',
       'assets',
       'imagemin:rel',
     ],
@@ -119,9 +128,13 @@ gulp.task('preview', ['clean'], function(cb) {
 
 // Build optimized files
 gulp.task('build', function(cb) {
-  runSequence('clean', [
-    'html:rel',
-    'assets',
-    'imagemin:rel'
-  ], cb)
+  runSequence(
+    'clean',
+    'sass:rel',
+    [
+      'jade:rel',
+      'assets',
+      'cname',
+      'imagemin:rel']
+  , cb)
 });
